@@ -91,27 +91,6 @@ LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		DestroyWindow(m_hwnd);
 		return 0;
 
-	//case WM_DESTROY:
-	//	PostQuitMessage(0);
-	//	return 0;
-
-	//case WM_PAINT:
-	//	OnPaint();
-	//	return 0;
-
-//	case WM_SIZE:
-//		if (FAILED(Resize()))
-//			return 1;
-	//		PostQuitMessage(0);
-//		return 0;
-
-//	case WM_CHAR:
-
-		//chCharCode = (TCHAR)wParam;
-		//if (chCharCode == VK_ESCAPE){
-		//	PostQuitMessage(0); //just sends a WM_QUIT to the threads message que
-		//}
-//		return 0;
 
 	case WM_WINDOWPOSCHANGING:
 		wp = (LPWINDOWPOS)lParam;
