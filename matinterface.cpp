@@ -10,7 +10,8 @@
 
 MainWindow* MWin = NULL;
 //ofstream g_fpData;
-FILE* g_fpData;
+//FILE* g_fpData;
+HANDLE g_hFile;
 UINT32 g_bytesPerFrame;
 UINT32 g_SamplesPerFrame;
 WCHAR StrShaderPath[260];
@@ -115,48 +116,85 @@ MATLIB_API int InitWindow(UINT* DisplayDim, UINT FilterLen, UINT nLineSamples, U
 	}
 
 	if (strFilename != NULL){ //save the data to a file
+
+		wchar_t  wszDest[160];
+		MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, strFilename, -1, wszDest, 160);
 		
 		//g_fpData = ofstream(StrFile, ios::out | ios::binary);
-		g_fpData = fopen(strFilename, "wb");
+		g_hFile = CreateFile(wszDest, // name of the write
+			GENERIC_WRITE,          // open for writing
+			0,                      // do not share
+			NULL,                   // default security
+			CREATE_NEW,             // create new file only
+			FILE_ATTRIBUTE_NORMAL,  // normal file
+			NULL);                  // no attr. template
+
+	//	g_fpData = fopen(strFilename, "wb");
 		//	if (!g_fpData.is_open())
-		if (!g_fpData)
+		if( g_hFile == INVALID_HANDLE_VALUE) //(!g_fpData)
 			{
 				MessageBox(NULL, L"Unable to create data file.", L"Error", MB_OK);
 				return 1;
 			}
-		}
-	else g_fpData = NULL;
+	}
+	else g_hFile = INVALID_HANDLE_VALUE;
 
 	   return 0;
 }
 
-MATLIB_API int RunSample(UINT16* DataOut, UINT8* Trg)
+MATLIB_API int RunSample(UINT16* DataOut, UINT8* Trg) //, ULONG* nmBufEmpty)
 {
+	BOOL bErrorFlag = FALSE;
+	DWORD dwBytesWritten = 0;
+
 	if (GetCapBuf()){
 		UINT16* pBuf = getBuf();
-		*Trg = pBuf[0] & 0x03;  //trigger output
+		*Trg = (pBuf[0] & 0x03);  //trigger output
 
 		//map data to GPU, run compute shader and render result on screen
 		MWin->Render((UINT*)pBuf, (UINT*)DataOut);
 		if (!PostBuf())
 			return 1;
 
-		if (g_fpData)
+		if (g_hFile != INVALID_HANDLE_VALUE) //(g_fpData)
 		{
 		//	// Write buffer to file and save image data
 			//g_fpData.write((char*)DataOut, g_bytesPerFrame);
 			if (g_SavePmt == 1){
 
 				//green channel
-				fwrite((char*)DataOut, sizeof(char), g_bytesPerFrame / 2, g_fpData);
+				//fwrite((char*)DataOut, sizeof(char), g_bytesPerFrame / 2, g_fpData);
+				bErrorFlag = WriteFile(
+					g_hFile,           // open file handle
+					DataOut,      // start of data to write
+					g_bytesPerFrame / 2,  // number of bytes to write
+					&dwBytesWritten, // number of bytes that were written
+					NULL);            // no overlapped structure
 			}	
 			else if(g_SavePmt == 2){
 				//red channel
 				//DataOut is a UINT32 pointer => two uint16 pages of data; point to the second half 
-				fwrite((char*)(DataOut + g_SamplesPerFrame/2), sizeof(char), g_bytesPerFrame / 2, g_fpData);
+				//fwrite((char*)(DataOut + g_SamplesPerFrame/2), sizeof(char), g_bytesPerFrame / 2, g_fpData);
+				bErrorFlag = WriteFile(
+					g_hFile,           // open file handle
+					(DataOut + g_SamplesPerFrame / 2),      // start of data to write
+					g_bytesPerFrame / 2,  // number of bytes to write
+					&dwBytesWritten, // number of bytes that were written
+					NULL);            // no overlapped structure
 			}
 			else {//both channels
-				fwrite((char*)DataOut, sizeof(char), g_bytesPerFrame, g_fpData);
+				//fwrite((char*)DataOut, sizeof(char), g_bytesPerFrame, g_fpData);
+				bErrorFlag = WriteFile(
+					g_hFile,           // open file handle
+					DataOut,      // start of data to write
+					g_bytesPerFrame,  // number of bytes to write
+					&dwBytesWritten, // number of bytes that were written
+					NULL);            // no overlapped structure
+			}
+			if (FALSE == bErrorFlag)
+			{
+				printf("Terminal failure: Unable to write to file.\n");
+				return 1;
 			}
 		}
 
@@ -175,9 +213,10 @@ MATLIB_API void Clearwin()
 		AbortCapture(); //alazar abort
 		clearBuffers(); //alazar MEM_CLEAR buffers
 
-		if (g_fpData){
-			fclose(g_fpData);
-			g_fpData = NULL;
+		if (g_hFile != INVALID_HANDLE_VALUE){
+			//fclose(g_fpData);
+			//g_fpData = NULL;
+			CloseHandle(g_hFile);
 		}
 	}
 

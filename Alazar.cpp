@@ -63,17 +63,17 @@ BOOL ConfigureBoard()
 		return false;
 	}
 		
-	//retCode = AlazarSetCaptureClock(g_boardHandle,
-	//	FAST_EXTERNAL_CLOCK,
-	//	SAMPLE_RATE_USER_DEF,
-	//	CLOCK_EDGE_RISING,
-	//	0);
-
 	retCode = AlazarSetCaptureClock(g_boardHandle,
-		INTERNAL_CLOCK,
-		SAMPLE_RATE_100MSPS,
+		FAST_EXTERNAL_CLOCK,
+		SAMPLE_RATE_USER_DEF,
 		CLOCK_EDGE_RISING,
 		0);
+
+	//retCode = AlazarSetCaptureClock(g_boardHandle,
+	//	INTERNAL_CLOCK,
+	//	SAMPLE_RATE_100MSPS,
+	//	CLOCK_EDGE_RISING,
+	//	0);
 
 	if (retCode != ApiSuccess)
 	{
@@ -363,6 +363,8 @@ BOOL GetCapBuf()
 	if (retCode == ApiSuccess)
 	{
 		// This buffer is complete, but there are more buffers in the acquisition.
+		//RETURN_CODE 
+		//AlazarGetParameterUL(g_boardHandle, CHANNEL_ALL, GET_ASYNC_BUFFERS_PENDING_EMPTY, &g_buffersEmpty);
 	}
 	else if (retCode == ApiTransferComplete)
 	{
