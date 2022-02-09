@@ -177,7 +177,7 @@ MATLIB_API int RunSample(UINT16* DataOut, UINT8* Trg) //, ULONG* nmBufEmpty)
 				//fwrite((char*)(DataOut + g_SamplesPerFrame/2), sizeof(char), g_bytesPerFrame / 2, g_fpData);
 				bErrorFlag = WriteFile(
 					g_hFile,           // open file handle
-					(DataOut + g_SamplesPerFrame / 2),      // start of data to write
+					(DataOut + g_SamplesPerFrame),      // start of data to write
 					g_bytesPerFrame / 2,  // number of bytes to write
 					&dwBytesWritten, // number of bytes that were written
 					NULL);            // no overlapped structure
