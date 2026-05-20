@@ -246,7 +246,7 @@ BOOL PrepAcquire(BOOL bScan, UINT lines)
 		recordsPerBuffer = lines / 2;
 	}
 
-	U32 bytesPerSample = 2;
+	U32 bytesPerSample = 2; //uint16
 	g_samplesPerBuffer = samplesPerRecord * channelCount * recordsPerBuffer;
 	g_bytesPerBuffer = bytesPerSample * g_samplesPerBuffer;
 
@@ -292,7 +292,7 @@ BOOL PrepAcquire(BOOL bScan, UINT lines)
 
 		clearBuffers();
 
-		g_BaseAdress = VirtualAlloc(NULL, g_bytesPerBuffer * bufferCount, MEM_RESERVE, PAGE_READWRITE);
+		g_BaseAdress = VirtualAlloc(NULL, (size_t)g_bytesPerBuffer * bufferCount, MEM_RESERVE, PAGE_READWRITE);
 
 		char* pCharBuf = (char*)VirtualAlloc(g_BaseAdress, g_bytesPerBuffer, MEM_COMMIT, PAGE_READWRITE);
 		g_Buffer[0] = (UINT16*)pCharBuf;
